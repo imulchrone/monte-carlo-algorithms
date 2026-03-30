@@ -1,0 +1,83 @@
+---
+title: "In-Class Lab 8 Shell"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+###settings for R chunks
+opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=FALSE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output; fig.keep: show all figures or just the last one in an R chunk
+```
+
+### 1. $$\mu = E[\frac{3}{4}e^{-x^2}]$$, where X~U[0,0.75]
+
+### 2. Simple Monte Carlo estimator
+
+```{r}
+rm(list=ls())
+n = 1000
+x = runif(n,0,0.75)
+y = 3/4*exp(-x^2)
+est.smc = mean(y)
+error.smc = 2.58*sd(y)/sqrt(n)
+CI.low = est.smc - error.smc
+CI.high = est.smc + error.smc
+```
+We are 99% confident the integral is between ``r CI.low`` and ``r CI.high``.
+
+### 3. Use X~U[0, 0.75] as control variate
+
+```{r}
+mu.x = 0+0.75/2
+beta.hat = cov(x,y)/var(x)
+W = y+beta.hat*(mu.x-x)
+est.CVX = mean(W)
+error.CVX = 2.58*sd(W)/sqrt(n)
+CI.low = est.CVX - error.CVX
+CI.high = est.CVX + error.CVX
+```
+Using the control variate X, we are 99% confident the integral is between ``r CI.low`` and ``r CI.high``.
+
+### 4. Use Z = e^(-X) as the control variate
+
+```{r}
+z = exp(-x)
+mu.z = (1-exp(-0.75))/0.75
+beta.hat = cov(z,y)/var(z)
+W = y+beta.hat*(mu.z-z)
+est.CVZ = mean(W)
+error.CVZ = 2.58*sd(W)/sqrt(n)
+CI.low = est.CVZ - error.CVZ
+CI.high = est.CVZ + error.CVZ
+```
+Using the control variate Z, we are 99% confident the integral is between ``r CI.low`` and ``r CI.high``.
+
+### 5. Both the control variate estimators will produce a more narrow confidence interval than the simple Monte Carlo estimator because X and Z are both correlated with Y. The control variate X has the smaller confidence error than Z, so the control variate X estimator is the most efficient.
+
+### 6. Compute the correlation between the target random variable and control variate
+
+```{r}
+cor.x = cor(x,y)
+cor.z = cor(z,y)
+```
+The correlation between X and Y is ``r cor.x`` and the for Z and Y it is ``r cor.z``. Since the correlation for X and Y is larger, that makes the estimator more accurate, creating a smaller confidence interval.
+
+### 7. Compare to the true answer.
+
+```{r}
+true.answer = sqrt(pi)*(pnorm(0.75*sqrt(2))-0.5)
+true.error.SMC = abs(est.smc - true.answer)
+true.error.CVX = abs(est.CVX - true.answer)
+true.error.CVZ = abs(est.CVZ - true.answer)
+```
+
+The true answer for Y is ``r true.answer``.
+The true error for the SMC is ``r true.error.SMC``.
+The true error for the control variate X is ``r true.error.CVX``.
+The true error for the control variate Z is ``r true.error.CVZ``.
+This conclusion agrees with our answer in #5 since the true error for control variate X is the smallest.

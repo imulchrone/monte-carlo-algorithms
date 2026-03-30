@@ -1,0 +1,46 @@
+---
+title: "In-Class Lab 9 Shell"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+###settings for R chunks
+opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=FALSE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output; fig.keep: show all figures or just the last one in an R chunk
+```
+
+### 1. The two quantitative measures are the probability of the gun firing a bullet without spinning the barrel and the probability of the gun firing if the barrel is spun. The decision will be based on which outcome has a lower likelihood of firing a bullet.
+
+### 2. Simulate the scenario of spinning and not spinning the barrel many times and record how many times the player survives the game. You can then calculate the expected survival rate based on the results of the simulation.
+
+### 3.
+
+```{r}
+rm(list=ls())
+n=10^4
+con.survive = c()
+spin.survive = c()
+for (i in 1:n){
+  bullet.1 = sample(1:6,1)
+  bullet.2 = ifelse(bullet.1==6,1,bullet.1+1)
+  bullet.slots = c(bullet.1,bullet.2)
+  safe.slots = setdiff(1:6,bullet.slots)
+  shoot.slot = sample(safe.slots,1)
+  #1 continue to shoot
+  con.next.shoot = ifelse(shoot.slot==6,1,shoot.slot+1)
+  con.survive[i] = ifelse(con.next.shoot==bullet.1,0,1)
+  #2 spin the barrel
+  spin.next.shoot = sample(1:6,1)
+  spin.survive[i] = ifelse(spin.next.shoot %in% bullet.slots,0,1)
+}
+est.prob.con.survive = mean(con.survive)
+error.con.survive = 2.58*sqrt(est.prob.con.survive*(1-est.prob.con.survive)/n)
+est.prob.spin.survive = mean(spin.survive)
+error.spin.survive = 2.58*sqrt(est.prob.spin.survive*(1-est.prob.spin.survive)/n)
+```
+If Mr. Bad continues to shoot, we are 99% confident the survival rate is between ``r {est.prob.con.survive-error.con.survive}`` and ``r {est.prob.con.survive+error.con.survive}``. If Mr. Bad spins the barrel before the next shot, we are 99% confident the survival rate is between ``r {est.prob.spin.survive-error.spin.survive}`` and ``r {est.prob.spin.survive+error.spin.survive}``. Based on these confidence intervals, we can conclude that the safest option is to have Mr. Bad continue to shoot without spinning the barrel.

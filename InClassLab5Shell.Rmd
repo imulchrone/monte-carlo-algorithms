@@ -1,0 +1,74 @@
+---
+title: "In-ClassLab5"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+###settings for R chunks
+opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=FALSE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output; fig.keep: show all figures or just the last one in an R chunk
+```
+
+
+## (a).
+
+### i. The inverse funtion of F(x) is
+$$F^{-1}(u) = -ln(1/u - 1)$$
+
+### ii. Generate a sample of uniform random numbers
+
+```{r}
+rm(list=ls()) #delete all variables
+n=10^3 #simulation size
+U = runif(n)
+```
+
+### iii. Generate a sample of X~F(x) using the inverse distribution transformation.
+
+```{r}
+X = -log(1/U-1)
+```
+
+### iv. Generate a sample of Y = X^3.
+
+```{r}
+Y = X^3
+```
+
+## (b) Estimate the mean, E(Y), using the sample mean of Y.
+
+```{r}
+est.mu = mean(Y)
+```
+
+## (c) Construct a 99% confidence interval for E(Y).
+
+```{r}
+est.error = 2.58*sd(Y)/sqrt(n)
+CI.low = est.mu - est.error
+CI.high = est.mu + est.error
+```
+
+We are 99% confident that mean falls between ``r CI.low`` and ``r CI.high``.
+
+## (d) [Insert your conclusion.]
+```{r}
+true.answer = 0
+if (CI.low<=true.answer& CI.high>=true.answer){cat("The confidence interval contains the true answer.")}else{cat("The confidence interval doesn't contain the true answer.")}
+```
+
+
+## (e) Compute the true absolute error of the estimate.
+
+```{r}
+true.answer = 0
+true.error = abs(true.answer - est.mu)
+```
+
+## (f) 
+
+The estimation error for a 99% confidence estimate tends to be much larger than the true error. In this example, the estimation error is ``r est.error``, while the true error is ``r true.error``.
