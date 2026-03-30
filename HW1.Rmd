@@ -1,0 +1,44 @@
+---
+title: "HW1"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=TRUE,result='asis'}
+##load packages
+library(knitr)
+###settings for R chunks
+knitr::opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=TRUE,
+               results='asis')
+```
+
+## 1. Lottery problem
+If there are 9 lottery tickets with one winner and 9 people take turns selecting tickets, the first person to select a ticket will have a 1/9 chance of winning. If they are not the winner, the second person will have a 1/8 chance to win and so on until a winning ticket is selected. At any point that a winner is determined, all individuals selecting afterwords will therefore have a 0% chance of winning. So, the first person will always have a chance to win, but the eighth person often will not have the opportunity to win if the winning ticket is drawn before their turn. To find out how many times the eighth person can be expected to win the lottery, a Monte Carlo method can be used to run this scenario many times (say 1,000,000) and count how many times the eighth person wins. Using this sample probability, a 99% confidence interval for the true probability can be calculated.
+
+## 2
+```{r}
+d = 6
+n = 10^6
+game.numbers = matrix(NA,nrow=n,ncol=d)
+game.numbers[,1] = rnorm(n) #generate matrix of random numbers from standard normal distribution
+for (i in 2:d){
+  game.numbers[,i] = game.numbers[,i-1]*rnorm(1) #product of previous number and another random number
+}
+
+game.results = c()
+for (i in 1:n){
+  game.results[i] = any(game.numbers[i,]>0) #check if any numbers in the game are > 0
+}
+
+number.wins = sum(game.results)
+est.prob = number.wins/n
+
+CI.low = est.prob - 2.58*sqrt(est.prob*(1-est.prob)/n)
+CI.high = est.prob + 2.58*sqrt(est.prob*(1-est.prob)/n)
+```
+We are 99% confident that the probability of winning the game falls between ``r CI.low`` and ``r CI.high``
+.
+
+## 3 (d) I can write R programs to implement some existing algorithms.

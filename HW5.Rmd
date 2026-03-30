@@ -1,0 +1,30 @@
+---
+title: "HW5"
+author: 'Ian Mulchrone'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pracma)
+```
+
+## Find inverse of the CDF:
+$$F(x) = 1-(\frac{2}{x})^3, x \geq 2$$
+$$u = 1-(\frac{2}{x})^3$$
+$$u-1 = -(\frac{2}{x})^3$$
+$$1-u = (\frac{2}{x})^3$$
+$$\sqrt[3]{1-u} = \frac{2}{x}$$
+$$x\sqrt[3]{1-u} = 2$$
+$$x = \frac{2}{\sqrt[3]{1-u}}$$
+
+## Generate 10 instances of F(x) using the inverse distribution transformation method.
+```{r}
+n = 10
+u = runif(n) #generate n instances of U[0,1]
+x = 2/nthroot(u,3) #F^-1(x) function
+#if u ~ U[0,1] then 1-u ~ U[0,1]
+#so 2/nthroot(1-u,3) is the same as 2/nthroot(u,3)
+print(x)
+```
+

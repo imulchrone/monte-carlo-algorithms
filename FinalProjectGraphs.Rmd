@@ -1,0 +1,161 @@
+---
+title: "ProjectNotes"
+author: "Ian Mulchrone"
+date: "2026-03-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+
+```{r}
+MT = 1
+d = 12
+delta = MT/d
+n = 1000
+x = rnorm(n)
+hist(x,
+     breaks = 30,
+     freq = FALSE,
+     col = "steelblue",
+     border = "white",
+     main = paste("Normal Distribution (n =", n, ")"),
+     xlab = "Value",
+     ylab = "Density",
+     yaxt='n')
+axis(2,at=seq(-3,3,by=1))
+
+curve(dnorm(x), add = TRUE, col = "red", lwd = 2)
+```
+```{r}
+x = rgamma(n,shape=delta/0.15,scale=0.15)
+hist(x,
+     breaks = 30,
+     freq = FALSE,
+     col = "steelblue",
+     border = "white",
+     main = paste("Gamma Distribution (shape = delta/0.15, scale = 0.15, n =", n, ")"),
+     xlab = "Value",
+     ylab = "Density")
+
+curve(dgamma(x,shape=delta/0.15,scale=0.15), add = TRUE, col = "red", lwd = 2)
+```
+```{r}
+#generate n sample paths of Brownian Motion
+n = 20 #number of sample paths
+d = 365 #discretize T year into d subintervals, number of times we monitor the BM
+MT = 1 #1 year
+delta = MT/d #length of subinterval
+#generate nxd pseudo-random normal numbers
+x = matrix(rnorm(n*d),nrow=n)
+#generate n sample paths of Brownian Motion
+BM = cbind(numeric(n),sqrt(delta)*t(apply(x,1,cumsum)))
+#plot the sample paths. comment out if no plot is desired
+plot((0:d)*delta,BM[1,],type='l',ylim=c(-3,3),col=1,ylab='Brownian Motion',xlab='Year')
+for (i in 2:n){
+  points((0:d)*delta,BM[i,],type='l',col=i)
+}
+```
+
+```{r}
+S.0 = 50
+K = 50
+MT = 1
+r.0 = 0.07
+sigma = 0.13
+d = 12
+delta = MT/d
+n = 100
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d) #can use numbers generated here as control variate for European disc payout and black scholes
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+plot((0:d),S[1,],type='l',ylim=c(30,80),col=1,ylab='Price',xlab='Month',main='Sample Price Paths (d=12,n=100)')
+for (i in 2:n){
+  points((0:d),S[i,],type='l',col=i)
+}
+```
+```{r}
+S.0 = 50
+K = 50
+MT = 1
+r.0 = 0.07
+sigma = 0.13
+d = 52
+delta = MT/d
+n = 100
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d) #can use numbers generated here as control variate for European disc payout and black scholes
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+plot((0:d),S[1,],type='l',ylim=c(30,80),col=1,ylab='Price',xlab='Week',main='Sample Price Paths (d=52,n=100)')
+for (i in 2:n){
+  points((0:d),S[i,],type='l',col=i)
+}
+```
+```{r}
+rm(list=ls())
+source('Sample.GBM2.R')
+S.0 = 50
+K = 50
+MT = 1
+r.0 = 0.07
+sigma = 0.13
+d = 12
+delta = MT/d
+n = 1000
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d) #can use numbers generated here as control variate for European disc payout and black scholes
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+S.GBM = Sample.GBM(S.0,MT,r.0,sigma,d,n,x) #changed function to allow random numbers x to be passed as an argument
+GBM.discpayoff = pmax(S.GBM[,d]-K,0)*exp(-r.0*MT) #control variate X
+disc.factor = -delta*rowSums(r[,2:(d+1)]) #discount factor model
+call.discpayoff = pmax(S[,d+1]-K,0)*exp(disc.factor) #Y
+plot(GBM.discpayoff,call.discpayoff,type='p',ylim=c(0,30),col=4,ylab='GBM',xlab='Variance-Gamma',main='Variance-Gamma and GBM Correlation')
+# for (i in 2:n){
+#   points((0:d),S[i,],type='p',col=i)
+# }
+```
+

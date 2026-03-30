@@ -1,0 +1,138 @@
+---
+title: "HW4"
+author: "Ian Mulchrone"
+date: "2026-01-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 7
+a
+$$Z = g(X) = (2)1000\frac{1}{10}e^{-X/10}$$
+```{r}
+rm(list=ls())
+n = 1000 #initial sample size
+epsilon = 0.50 #error tolerance 50 cents
+C= 1.1
+
+#New simulation size with more efficient estimator
+x = runif(n,0,2)
+y = 2*1000*1/10*exp(-x/10)
+sigma.hat = sd(y)
+N = ceiling((2.58*C*sigma.hat/epsilon)^2)
+```
+The simulation size with an error tolerance of 50 cents is ``r N``.
+
+
+b
+```{r}
+#Previous simulation size from 4d
+x.prev = rexp(n,rate=1/10)
+y.prev = ifelse(x.prev<2, 1000, 0)
+sigma.prev = sd(y.prev)
+N.prev = ceiling((2.58*C*sigma.prev/epsilon)^2)
+comp.size = round(N.prev/N)
+```
+
+The simulation size of the previous estimator was ``r N.prev`` which is about ``r comp.size`` times larger than the more efficient estimator.
+
+c
+```{r}
+X = runif(N,0,2) #new sample size
+Y = 2*1000*1/10*exp(-X/10) #new simulated sample of refunds
+CI.high = mean(Y) + 1.96*sd(Y)/sqrt(N) #95% confidence interval bounds
+CI.low = mean(Y) - 1.96*sd(Y)/sqrt(N)
+a.true = 181.27 #expected amount
+```
+
+We are 95% confident the expected refund to be between ``r CI.low`` and ``r CI.high`` which contains the true answer ``r a.true``.
+
+## 8
+
+a
+```{r}
+S.0 = 100
+r = 0.03
+vol = 0.3
+MT = 1
+
+#Strike price $75
+K = 75
+exact.call.price75 = S.0*pnorm((log(S.0/K)+(r+vol^2/2)*MT)/(vol*sqrt(MT)))-K*exp(-r*MT)*pnorm((log(S.0/K)+(r-vol^2/2)*MT)/(vol*sqrt(MT)))
+
+#Strike price $100
+K = 100
+exact.call.price100 = S.0*pnorm((log(S.0/K)+(r+vol^2/2)*MT)/(vol*sqrt(MT)))-K*exp(-r*MT)*pnorm((log(S.0/K)+(r-vol^2/2)*MT)/(vol*sqrt(MT)))
+
+#Strike price $130
+K = 130
+exact.call.price130 = S.0*pnorm((log(S.0/K)+(r+vol^2/2)*MT)/(vol*sqrt(MT)))-K*exp(-r*MT)*pnorm((log(S.0/K)+(r-vol^2/2)*MT)/(vol*sqrt(MT)))
+```
+
+For a strike price of $75, the exact fair option call price is ``r exact.call.price75``.
+
+For a strike price of $100, the exact fair option call price is ``r exact.call.price100``.
+
+For a strike price of $130, the exact fair option call price is ``r exact.call.price130``.
+
+b
+```{r}
+n = 10^5
+x = rnorm(n)
+BM = sqrt(MT)*x #sample BM at T
+S.T = S.0*exp((r-vol^2/2)*MT+vol*BM) #sample S(T)
+
+#Estimated call price for strike prices $75, $100, and $130
+K = 75
+disc.call.payoff75 = pmax(S.T-K,0)*exp(-r*MT)
+est.call.price75 = mean(disc.call.payoff75)
+err75 = abs(est.call.price75-exact.call.price75)
+
+K = 100
+disc.call.payoff100 = pmax(S.T-K,0)*exp(-r*MT)
+est.call.price100 = mean(disc.call.payoff100)
+err100 = abs(est.call.price100-exact.call.price100)
+
+K = 130
+disc.call.payoff130 = pmax(S.T-K,0)*exp(-r*MT)
+est.call.price130 = mean(disc.call.payoff130)
+err130 = abs(est.call.price130-exact.call.price130)
+
+err.highest = pmax(err75,err100,err130) #find largest error
+if (err.highest == err75){ #assign highest error label for conclusion
+  label='$75'
+} else if (err.highest == err100) {
+    label='$100'
+    } else {label='$130'}
+```
+
+The approximate values for the European call option value at strike price \$75 is ``r est.call.price75`` with an error of ``r err75``.
+
+For strike price \$100 the call option value is ``r est.call.price100`` with an error of ``r err100``. 
+
+For strike price \$130 the call option value is ``r est.call.price130`` with an error of ``r err130``.
+
+The strike price that has the largest error is ``r label`` with an error of ``r err.highest``.
+
+c
+```{r}
+n = 1000 #initial sample size
+epsilon = 0.30 #error tolerance 50 cents
+C = 1.1
+K = 100
+r = 0.03
+vol = 0.3
+MT = 1
+x = rnorm(n)
+BM = sqrt(MT)*x #sample BM at T
+S.T = S.0*exp((r-vol^2/2)*MT+vol*BM) #sample S(T)
+
+disc.call.payoff100 = pmax(S.T-K,0)*exp(-r*MT)
+sigma.hat = sd(disc.call.payoff100)
+N = ceiling((2.58*C*sigma.hat/epsilon)^2) #find new sample size
+```
+
+For the strike price $100, the simulation sample size required for an error tolerance of 30 cents is ``r N``.

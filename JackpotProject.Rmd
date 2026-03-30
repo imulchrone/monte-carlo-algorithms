@@ -1,0 +1,216 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-02-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1 (d=12)
+
+n sample paths for jackpot model
+```{r}
+library(tictoc)
+tic()
+rm(list = ls())
+graphics.off()
+
+S.0=50
+K=50
+MT=1
+r.0=0.07
+sigma=0.13
+
+d=12
+delta=MT/d
+n=10^4
+
+# generate n sample paths
+r=matrix(NA,nrow=n,ncol=d+1)
+r[,1]=r.0
+Z = matrix(rnorm(n*d),nrow=n)
+for (j in 2:(d+1)){
+  r[,j]=r[,j-1]+0.18*(0.086-r[,j-1])*delta+0.02*sqrt(delta)*Z[,j-1]
+}
+
+log.S=matrix(NA,nrow=n,ncol=d+1)
+log.S[,1]=log(S.0)
+X=matrix(rnorm(n*d),nrow=n)
+shape = delta/0.15
+scale = 0.15
+Y = matrix(rgamma(n*d, shape, scale),nrow=n)
+
+for (j in 2:(d+1)){
+  log.S[,j] = log.S[,j-1]+(r[,j-1]+(log(1-0.15*sigma^2/2)/0.15))*delta+sigma*sqrt(Y[,j-1])*X[,j-1]
+
+}
+S=exp(log.S)
+S.MT = S[,d+1]
+
+call.payoff= pmax(S.MT-K,0)
+disc.factor = exp(-delta*rowSums(r[,2:(d+1)]))
+call.discpayoff = call.payoff*disc.factor
+est.price = mean(call.discpayoff)
+
+est.error = sd(call.discpayoff)/sqrt(n)
+ci.low = est.price - 2.58 * est.error
+ci.high = est.price + 2.58 * est.error
+
+
+toc()
+
+```
+
+
+```{r}
+# Find required simulation size
+epsilon = 0.05
+C=1.1
+N = ceiling((2.58*C*sd(call.discpayoff)/epsilon)^2)
+```
+The appropriate sample size should be ``r N`` to assure the estimation error is no larger than 5 cents.
+
+
+Rerun model with n=N
+```{r}
+tic()
+# generate N sample paths
+n = N #using required simulation size
+
+r=matrix(NA,nrow=n,ncol=d+1)
+r[,1]=r.0
+Z = matrix(rnorm(n*d),nrow=n)
+for (j in 2:(d+1)){
+  r[,j]=r[,j-1]+0.18*(0.086-r[,j-1])*delta+0.02*sqrt(delta)*Z[,j-1]
+}
+
+log.S=matrix(NA,nrow=n,ncol=d+1)
+log.S[,1]=log(S.0)
+X=matrix(rnorm(n*d),nrow=n)
+shape = delta/0.15
+scale = 0.15
+Y = matrix(rgamma(n*d, shape, scale),nrow=n)
+
+for (j in 2:(d+1)){
+  log.S[,j] = log.S[,j-1]+(r[,j-1]+(log(1-0.15*sigma^2/2)/0.15))*delta+sigma*sqrt(Y[,j-1])*X[,j-1]
+
+}
+S=exp(log.S)
+S.MT = S[,d+1]
+
+call.payoff= pmax(S.MT-K,0)
+disc.factor = exp(-delta*rowSums(r[,2:(d+1)]))
+call.discpayoff = call.payoff*disc.factor
+est.price = mean(call.discpayoff)
+
+est.error = sd(call.discpayoff)/sqrt(n)
+ci.low.a = est.price - 2.58 * est.error
+ci.high.a = est.price + 2.58 * est.error
+
+toc()
+```
+est.price = ``r est.price``
+est.error = ``r est.error``
+ci.low = ``r ci.low.a``
+ci.high = ``r ci.high.a``
+
+
+## Part 2 (d=52)
+
+```{r}
+tic()
+
+d=52
+n=1000
+delta=MT/d
+
+# generate n sample paths
+r=matrix(NA,nrow=n,ncol=d+1)
+r[,1]=r.0
+Z = matrix(rnorm(n*d),nrow=n)
+for (j in 2:(d+1)){
+  r[,j]=r[,j-1]+0.18*(0.086-r[,j-1])*delta+0.02*sqrt(delta)*Z[,j-1]
+}
+
+log.S=matrix(NA,nrow=n,ncol=d+1)
+log.S[,1]=log(S.0)
+X=matrix(rnorm(n*d),nrow=n)
+shape = delta/0.15
+scale = 0.15
+Y = matrix(rgamma(n*d, shape, scale),nrow=n)
+
+for (j in 2:(d+1)){
+  log.S[,j] = log.S[,j-1]+(r[,j-1]+(log(1-0.15*sigma^2/2)/0.15))*delta+sigma*sqrt(Y[,j-1])*X[,j-1]
+
+}
+S=exp(log.S)
+S.MT = S[,d+1]
+
+call.payoff= pmax(S.MT-K,0)
+disc.factor = exp(-delta*rowSums(r[,2:(d+1)]))
+call.discpayoff = call.payoff*disc.factor
+est.price = mean(call.discpayoff)
+
+est.error = sd(call.discpayoff)/sqrt(n)
+ci.low = est.price - 2.58 * est.error
+ci.high = est.price + 2.58 * est.error
+toc()
+```
+
+
+Find required sample size
+```{r}
+epsilon = 0.05
+C=1.1
+N = ceiling((2.58*C*sd(call.discpayoff)/epsilon)^2)
+```
+The appropriate sample size should be ``r N`` to assure the estimation error is no larger than 5 cents.
+
+
+N sample paths
+```{r}
+tic()
+# generate N sample paths
+n = N #using required simulation size
+
+r=matrix(NA,nrow=n,ncol=d+1)
+r[,1]=r.0
+Z = matrix(rnorm(n*d),nrow=n)
+for (j in 2:(d+1)){
+  r[,j]=r[,j-1]+0.18*(0.086-r[,j-1])*delta+0.02*sqrt(delta)*Z[,j-1]
+}
+
+log.S=matrix(NA,nrow=n,ncol=d+1)
+log.S[,1]=log(S.0)
+X=matrix(rnorm(n*d),nrow=n)
+shape = delta/0.15
+scale = 0.15
+Y = matrix(rgamma(n*d, shape, scale),nrow=n)
+
+for (j in 2:(d+1)){
+  log.S[,j] = log.S[,j-1]+(r[,j-1]+(log(1-0.15*sigma^2/2)/0.15))*delta+sigma*sqrt(Y[,j-1])*X[,j-1]
+
+}
+S=exp(log.S)
+S.MT = S[,d+1]
+
+call.payoff= pmax(S.MT-K,0)
+disc.factor = exp(-delta*rowSums(r[,2:(d+1)]))
+call.discpayoff = call.payoff*disc.factor
+est.price = mean(call.discpayoff)
+
+est.error = sd(call.discpayoff)/sqrt(n)
+ci.low.b = est.price. - 2.58 * est.error
+ci.high.b = est.price. + 2.58 * est.error
+toc()
+```
+
+est.price = ``r est.price``
+est.error = ``r est.error``
+ci.low = ``r ci.low.b``
+ci.high = ``r ci.high.b``
+
+
+

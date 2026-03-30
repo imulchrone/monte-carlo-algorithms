@@ -1,0 +1,71 @@
+---
+title: "HW2"
+author: "Ian Mulchrone"
+date: "2026-01-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 4a
+
+$P(x<2) = 1 - e^{-(1/10)*2}$ <br>
+$P(x<2) = 1 - e^{-0.2}$ <br>
+$P(x<2) = 0.181269$ <br>
+$1000*0.181269 = 181.27$
+
+The expected refund amount for a dishwasher is $181.27.
+
+## 4b
+```{r}
+rm(list=ls())
+n1 = 10^4
+n2 = 10^6
+
+a.exp = 181.27 #expected amount
+
+x1 = rexp(n1, rate=1/10) #exponential rate with mean 10
+y1 = ifelse(x1<2,1000,0) #1000 refund if lifespan is under 2 years
+est1 = mean(y1)
+
+x2 = rexp(n2, rate=1/10)
+y2 = ifelse(x2<2,1000,0)
+est2 = mean(y2)
+
+error1 = abs(est1 - a.exp) #difference in calculated mean from true error
+error2 = abs(est2 - a.exp)
+diff = error1 - error2
+```
+
+Mean estimate when $n = 10^4$ is ``r est1``. Mean estimate when $n = 10^6$ is ``r est2``. Compared to the true answer computed analytically, the error for when $n = 10^6$ is ``r diff`` smaller than when $n = 10^4$.
+
+## 4c
+```{r}
+est.error1 = 1.96*sd(y1)/sqrt(n1) #95% confidence error
+CI.low1 = est1 - est.error1
+CI.high1 = est1 + est.error1
+
+est.error2 = 1.96*sd(y2)/sqrt(n2)
+CI.low2 = est2 - est.error2
+CI.high2 = est2 + est.error2
+```
+
+When $n = 10^4$, we are 95% confident that the mean refund amount for a dishwasher is between ``r CI.low1`` and ``r CI.high1``. When $n = 10^6$, we are 95% confident that the mean refund amount is between ``r CI.low2`` and ``r CI.high2``.
+
+## 4d
+```{r}
+n = 1000 #initial sample size
+x.initial = rexp(n,rate=1/10)
+y.initial = ifelse(x.initial<2, 1000, 0)
+hat.sigma = sd(y.initial)
+epsilon = 0.5 #error tolerance 50 cents
+C = 1.1
+N = ceiling((2.58*C*hat.sigma/epsilon)^2) #find new sample size
+```
+
+The required simulation size for an error tolerance of 50 cents is ``r N``.
+
+## 5
+I struggled initially with 4a to find the correct way to calculate the expected refund amount. However, after I found how to answer 4a, I felt comfortable with the remaining questions since we went over exactly how to do them in the lecture.

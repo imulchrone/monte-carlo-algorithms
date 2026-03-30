@@ -1,0 +1,35 @@
+---
+title: "HW3"
+author: "Ian Mulchrone"
+date: "2026-01-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+```
+
+$$\mu = \mathbb{E}(e^X) = \int_{-\infty}^{\infty} e^x \frac{1}{\sqrt{2\pi}} e^{-x^2/2} dx$$
+$$M_x(t) = \mathbb{E}(e^{tx}) = \int_{-\infty}^{\infty} e^{tx} \frac{1}{\sqrt{2\pi}} e^{-x^2/2} dx$$
+$$M_x(t) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-x^2/2 + tx} dx$$
+$$-x^2/2 + tx = -1/2(x^2 - 2tx) = -1/2((x-t)^2 -t^2) =  -1/2(x-t^2) + t^2/2$$
+$$M_x(t) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-1/2(x-t^2) + t^2/2} dx$$
+$$M_x(t) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-1/2(x-t^2)} e^{t^2/2} dx$$
+$$M_x(t) = \frac{e^{t^2/2}}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-1/2(x-t^2)} dx$$
+$$M_x(t) = e^{t^2/2} \int_{-\infty}^{\infty} \frac{e^{-1/2(x-t^2)}}{\sqrt{2\pi}} dx$$
+$$\frac{e^{-1/2(x-t^2)}}{\sqrt{2\pi}} dx = 1$$
+$$M_x(t) = e^{t^2/2}$$
+$$\mu = \mathbb{E}(e^X) = M_x(1) = e^{1^2/2}$$
+```{r}
+true = exp(1/2) #true mean
+n = 10^5
+x = rnorm(n) #standard normal distribution
+y = exp(x)
+est = mean(y)
+est.error = 1.96*sd(y)/sqrt(n) #95% confidence error
+CI.low = est - est.error
+CI.high = est + est.error
+```
+
+The 95% confidence interval of the estimated mean falling between ``r CI.low`` and ``r CI.high`` contains the true mean ``r true``. 
