@@ -1,0 +1,63 @@
+---
+title: "HW7"
+author: "Ian Mulchrone"
+date: "2026-02-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+## 12
+a. To estimate the expected award amount, we can generate many random instances of Q1 and X based on their probability distributions. With these values, we can calculate the six quiz grades using the model for Q. Then, we can calculate the expected return using the mean reward the student received across many simulations, as well as a 99% confidence interval with the estimated error.
+b.
+```{r}
+n = 10^5
+d = 6
+scores = matrix(nrow=n,ncol=d) 
+scores[,1] = rnorm(n,mean=85,sd=3) #initial Q1 scores
+x = matrix(runif(n*(d-1),-1,1),nrow=n,ncol=d-1) #x values matrix
+for (i in 1:(d-1)){
+  #quiz scores function
+  scores[,i+1] = 26 + 0.7*scores[,i] + 5*x[,i]
+}
+#$200 reward if 2 quiz scores > 90, else $0
+reward = ifelse(rowSums(scores>90) >= 2, 200, 0)
+est.reward = mean(reward)
+est.error = 2.58*sd(reward)/sqrt(n)
+CI.low = est.reward - est.error
+CI.high = est.reward + est.error
+```
+Using a simulation size of ``r n``, the estimated reward Jacob will receive from his mom is ``r est.reward``. We are 99% confident the true mean reward is between ``r CI.low`` and ``r CI.high``.
+
+c. I am confident I could write the code independently, though the hints were helpful to speed up the process and limit mistakes.
+
+## 13
+```{r}
+S.0 = 50
+K = 50
+MT = 1
+r.0 = 0.07
+sigma = 0.13
+d = 12
+delta = MT/d
+
+z = rnorm(d)
+r = c()
+r[1] = r.0
+log.S = c()
+log.S[1] = log(S.0)
+x = rnorm(d)
+y = rgamma(d,delta/0.15,0.15)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[i] = r[i-1] + 0.18*(0.086-r[i-1])*delta+0.02*sqrt(delta)*z[i-1]
+  #Variance-gamma model
+  log.S[i] = log.S[i-1]+(r[i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[i-1])*x[i-1]
+}
+S = exp(log.S) #one sample path of Variance-Gamma model
+S
+```
+

@@ -1,0 +1,72 @@
+---
+title: "In-ClassLab2"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+###settings for R chunks
+opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=FALSE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output; fig.keep: show all figures or just the last one in an R chunk
+```
+
+## 1. 
+### (a) The target random variable Y is the expected payout for the policy.
+
+### (b) The basic random variable X is the survival time of the insured, X~exp(25).
+
+### (c) Y = 50,000 if X<=20; Y=0 if X>20.
+
+### (d) Fair premium = E(Y)
+
+## 2. To estimate the fair premium, which is E(Y), we generate a simple random smaple of Y and use the sample mean of the random sample to estimate E(Y).
+
+## 3.
+### (a) 
+```{r}
+n = 10^3
+x = rexp(n,rate=1/25)
+```
+
+### (b)
+```{r}
+y = ifelse(x > 20, 0, 50000)
+```
+
+### (c)
+```{r}
+est.premium = mean(y)
+```
+
+### (d)
+```{r}
+est.error = 2.58*(sd(y)/sqrt(n))
+```
+
+### (e) We are 99% confident that the fair premium falls between ``r est.premium - est.error`` and ``r est.premium + est.error``.
+
+## 4. 
+```{r}
+n = 1000
+x.initial = rexp(n,rate=1/25)
+y.initial = ifelse(x.initial > 20, 0, 50000)
+hat.sigma = sd(y.initial)
+epsilon = 5
+C = 1.1
+N = ceiling((2.58*C*hat.sigma/epsilon)^2)
+```
+The required sample size is ``r N``.
+
+## 5.
+```{r}
+x = rexp(N,rate=1/25)
+y = ifelse(x > 20, 0, 50000)
+est.premium = mean(y)
+est.error = 2.58*sd(y)/sqrt(N)
+```
+The required simulation size is ``r N``. We are 99% confident that the mean of Y falls between ``r est.premium-est.error`` and ``r est.premium+est.error``.
+
+

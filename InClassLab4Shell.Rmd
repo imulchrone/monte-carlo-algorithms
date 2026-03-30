@@ -1,0 +1,116 @@
+---
+title: "In-ClassLab4"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+###settings for R chunks
+opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=FALSE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output; fig.keep: show all figures or just the last one in an R chunk
+```
+
+
+We first start with a relatively small simulation size, n=10000, to compute the required simulation size.
+
+Define the variable values.
+
+```{r}
+n=10000
+K = 45
+MT = 0.5
+S.0 = 50
+r = 0.03
+sigma = 0.2
+```
+
+To simulate n stock prices at maturity, generate n standard normal random numbers, one for each stock price simulation.
+
+```{r}
+#n standard normal random numbers to generate n asset prices at maturity
+z = rnorm(n)
+```
+
+To simulate stock price at maturity, generate n instances of Brownian motion.
+
+```{r}
+#n sampled BM at maturity
+BM = sqrt(MT)*z
+```
+
+Generate n stock prices at maturity.
+
+```{r}
+#n asset prices at maturity
+S = S.0*exp((r-sigma^2/2)*MT+sigma*BM)
+```
+
+Generate n discounted payoffs.
+
+```{r}
+#n discounted payoffs
+disc_payoffs = pmax(K-S,0)*exp(r*MT)
+```
+
+Compute the required simulation size using the formula
+$$n = \lceil (2.58C\hat{\sigma}_{payoff}/\varepsilon)^2\rceil,$$
+where $\varepsilon$ is the sample standard deviation of the discounted payoffs we just generated.
+
+```{r}
+epsilon = 0.5
+C = 1.1
+N = 10000
+sigma.hat = sd(disc_payoffs)
+N = ceiling((2.58*C*sigma.hat/epsilon)^2)
+```
+
+Now, we will use the appropriate simulation size to estimate the put option price. For n simulated stock prices at maturity, generate n standard normal random number.
+
+```{r}
+z = rnorm(N)
+```
+
+To simulate n stock prices at maturity, generate n instances of Brownian motion.
+
+```{r}
+BM = sqrt(MT)*z
+```
+
+Generate n stock prices at maturity.
+
+```{r}
+S.T = S.0*exp((r-sigma^2/2)*MT+sigma*BM)
+```
+
+Generate n discounted payoffs.
+
+```{r}
+disc.payoffs = pmax(K-S.T,0)*exp(-r*MT)
+```
+
+Estimate the fair price of the option using the sample mean of the simulated discounted payoffs.
+
+```{r}
+est.put.price = mean(disc.payoffs)
+```
+
+Since the underlying asset price is assumed to follow a GBM, the true option price can be computed using Black-Scholes formula.
+
+```{r}
+###uncomment the following line when you get here.
+ExactEuroPut<-K*exp(-r*MT)*pnorm((log(K/S.0)-(r-sigma^2/2)*MT)/(sigma*sqrt(MT)))-S.0*pnorm((log(K/S.0)-(r+sigma^2/2)*MT)/(sigma*sqrt(MT)))
+
+```
+
+Using the true option price, we can compute the true error.
+
+```{r}
+true.price.error = abs(ExactEuroPut - est.put.price)
+```
+
+The true error between the Monte Carlo and the exact price is ``r true.price.error`` which is smaller than the pre-set error tolerance of 50 cents.
+
+

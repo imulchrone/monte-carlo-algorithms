@@ -1,0 +1,69 @@
+---
+title: "HW6"
+author: "Ian Mulchrone"
+date: "2026-02-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = setdiff(ls(), lsf.str()))
+source('Sample.GBM.R')
+```
+
+## 10
+First, calculate the Brownian motion at each time interval.
+$$B(k{\Delta}t) = \sqrt{{\Delta}t}(X_{1}+X_{2}+...+X_{k}); k = 1,...,d; X \sim N(0,1)$$
+$${\Delta}t = \frac{T}{d} = \frac{1/2}{6}$$
+$$B(1{\Delta}t) = \sqrt{\frac{1/2}{6}}(2.6328) = 0.7600239$$
+$$B(2{\Delta}t) = \sqrt{\frac{1/2}{6}}(2.6328+0.0828) = 0.7839262$$
+$$B(3{\Delta}t) = \sqrt{\frac{1/2}{6}}(2.6328+0.0828-0.9937) = 0.4970697$$
+$$B(4{\Delta}t) = \sqrt{\frac{1/2}{6}}(2.6328+0.0828-0.9937+0.3436) = 0.5962585$$
+$$B(5{\Delta}t) = \sqrt{\frac{1/2}{6}}(2.6328+0.0828-0.9937+0.3436+0.0499) = 0.6106634$$
+$$B(6{\Delta}t) = \sqrt{\frac{1/2}{6}}(2.6328+0.0828-0.9937+0.3436+0.0499-2.5073) = -0.1131318$$
+Now, we can calculate the sample path for Geometric Brownian Motion.
+$$S(k{\Delta}t) = S(0)e^{(r-\frac{\sigma^2}{2})k{\Delta}t+\sigma*B(k{\Delta}t)}$$
+$$S(1{\Delta}t) = 50e^{(0.07-\frac{0.5^2}{2})1\sqrt{\frac{1/2}{6}}+0.5*0.7600239} = 71.96341$$
+$$S(2{\Delta}t) = 50e^{(0.07-\frac{0.5^2}{2})2\sqrt{\frac{1/2}{6}}+0.5*0.7839262} = 71.68144$$
+$$S(3{\Delta}t) = 50e^{(0.07-\frac{0.5^2}{2})3\sqrt{\frac{1/2}{6}}+0.5*0.4970697} = 61.12534$$
+$$S(4{\Delta}t) = 50e^{(0.07-\frac{0.5^2}{2})4\sqrt{\frac{1/2}{6}}+0.5*0.5962585} = 63.22146$$
+$$S(5{\Delta}t) = 50e^{(0.07-\frac{0.5^2}{2})5\sqrt{\frac{1/2}{6}}+0.5*0.6106634} = 62.6754$$
+$$S(6{\Delta}t) = 50e^{(0.07-\frac{0.5^2}{2})6\sqrt{\frac{1/2}{6}}+0.5*-0.1131318} = 42.95677$$
+```{r}
+MT = 1/2
+d = 6
+delta = MT/d
+gbm_points = c(50,71.96341,71.68144,61.12534,63.22146,62.6754,42.95677)
+plot((0:d)*delta,gbm_points,type='l',ylim=c(0,100),ylab='Price',xlab='Time(years)',main='Sample GBM Path')
+```
+
+## 11-a
+```{r}
+rm(list = setdiff(ls(), lsf.str()))
+S.0 = 100
+sigma = 0.4
+r = 0
+MT = 12/52
+d = 12
+K = 110
+epsilon = 0.50 #50 cent estimation error
+n = 10^4
+C = 1.1
+S = Sample.GBM(S.0,MT,r,sigma,d,n)
+Ari.Mean = rowMeans(S) #arithmetic mean for each path
+Ari.Call.Payoff = pmax(Ari.Mean-K,0)*exp(-r*MT) #sample payoff for call option
+N = ceiling((2.58*C*sd(Ari.Call.Payoff)/epsilon)^2) #new sample size
+```
+To ensure the estimation error is no larger than 50 cents, the appropriate simulation size is ``r N``.
+
+## 11-b
+```{r}
+S = Sample.GBM(S.0,MT,r,sigma,d,N) #GBM with new sample size
+Ari.Mean = rowMeans(S) #arithmetic mean for each path
+Ari.Call.Payoff = pmax(Ari.Mean-K,0)*exp(-r*MT) #sample payoff for call option
+est.AriCallPrice = mean(Ari.Call.Payoff) #estimated Asian call price using arithmetic mean
+est.error = 2.58*sd(Ari.Call.Payoff)/sqrt(N)
+CI.low = est.AriCallPrice-est.error
+CI.high = est.AriCallPrice+est.error
+```
+Using a simulation size of ``r N``, we are 99% confident the mean Asian call option price will be between ``r CI.low`` and ``r CI.high``.

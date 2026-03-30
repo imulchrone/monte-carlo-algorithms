@@ -1,0 +1,201 @@
+---
+title: "HW8"
+author: "Ian Mulchrone"
+date: "2026-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+rm(list=ls())
+source('Sample.GBM.R')
+source('ExactPrice.GBM.R')
+library(tictoc)
+```
+
+## 14
+### a
+```{r}
+n=10^5
+S.0 = 100
+sigma = 0.4
+r = 0
+MT = 12/52
+d = 12
+K = 110
+#exact Geometric mean Asian options using Black-Scholes formula
+Bar.T=MT*(1+1/d)/2
+Bar.sigma=sqrt(sigma^2*(2+1/d)/3)
+Bar.r=r+(Bar.sigma^2-sigma^2)/2
+exact.GeoCallPrice=ExactPrice.GBM(S.0,Bar.T,Bar.r,Bar.sigma,K,type='call')*exp(Bar.r*Bar.T-r*MT) #mu.X
+
+S = Sample.GBM(S.0,MT,r,sigma,d,n)
+GeoMean = apply(S^(1/d),1,prod)
+Geo.Call.Payoff = pmax(GeoMean-K,0)*exp(-r*MT) #X
+
+Ari.Mean = rowMeans(S)
+Ari.Call.Payoff = pmax(Ari.Mean-K,0)*exp(-r*MT) #Y
+est.AriCallPrice = mean(Ari.Call.Payoff) #Y.bar
+
+beta.hatG = cov(Geo.Call.Payoff,Ari.Call.Payoff)/var(Geo.Call.Payoff)
+W = Ari.Call.Payoff+beta.hatG*(exact.GeoCallPrice-Geo.Call.Payoff)
+est.CVG = mean(W)
+error.CVG = 2.58*sd(W)/sqrt(n)
+CI.low = est.CVG - error.CVG
+CI.high = est.CVG + error.CVG
+```
+Using the Geometric Asian call option price as a control variate for Arithmetic Asian call option, we are 99% confident the true mean is between ``r CI.low`` and ``r CI.high``.
+
+### b
+```{r}
+exact.EuroCallPrice = ExactPrice.GBM(S.0,MT,r,sigma,K,type='call') #mu.X
+S = Sample.GBM(S.0,MT,r,sigma,d,n)
+EuroCallPayoff=pmax(S[,d]-K,0)*exp(-r*MT) #X
+
+Ari.Mean = rowMeans(S)
+Ari.Call.Payoff = pmax(Ari.Mean-K,0)*exp(-r*MT) #Y
+est.AriCallPrice = mean(Ari.Call.Payoff) #Y.bar
+
+beta.hatE = cov(EuroCallPayoff,Ari.Call.Payoff)/var(EuroCallPayoff)
+W = Ari.Call.Payoff+beta.hatE*(exact.EuroCallPrice-EuroCallPayoff)
+est.CVE = mean(W)
+error.CVE = 2.58*sd(W)/sqrt(n)
+CI.low = est.CVE - error.CVE
+CI.high = est.CVE + error.CVE
+```
+Using the European call option price as a control variate for Arithmetic Asian call option, we are 99% confident the true mean is between ``r CI.low`` and ``r CI.high``.
+
+### c
+The error for Geometric Asian control variate method is about ``r {error.CVE/error.CVG}`` times smaller than the error for the European option control variate method, making the confidence interval significantly more narrow for the first method. This is because the Arithmetic Asian Call option price is more highly correlated to the Geometric Asian Call option price than it is to the European call option price, improving the estimator's efficiency.
+
+## 15
+Final project draft for Jackpot model
+
+```{r}
+rm(list=ls())
+tic()
+S.0 = 50
+K = 50
+MT = 1
+r.0 = 0.07
+sigma = 0.13
+d = 12
+delta = MT/d
+n = 10^4
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d) 
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+disc.factor = -delta*rowSums(r[,2:(d+1)]) #discount factor model
+call.discpayoff = pmax(S[,d+1]-K,0)*exp(disc.factor)
+
+epsilon = 0.05
+C = 1.1
+sigma.hat = sd(call.discpayoff)
+N = ceiling((2.58*C*sigma.hat/epsilon)^2) #new simulation size
+
+n = N
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d)
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+disc.factor = -delta*rowSums(r[,2:(d+1)]) #discount factor model
+call.discpayoff = pmax(S[,d+1]-K,0)*exp(disc.factor)
+est.mean = mean(call.discpayoff)
+est.error = 2.58*sd(call.discpayoff)/sqrt(n)
+CI.low = est.mean - est.error
+CI.high = est.mean + est.error
+toc()
+```
+Using a time step of 1 month, an error tolerance of $0.05 and a simulation size of ``r n``, the estimated fair call option price is ``r est.mean``. We are 99% confident the fair call option price is between ``r CI.low`` and ``r CI.high``.
+
+```{r}
+rm(list=ls())
+tic()
+S.0 = 50
+K = 50
+MT = 1
+r.0 = 0.07
+sigma = 0.13
+d = 52
+delta = MT/d
+n = 1000
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d)
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+disc.factor = -delta*rowSums(r[,2:(d+1)]) #discount factor model
+call.discpayoff = pmax(S[,d+1]-K,0)*exp(disc.factor)
+
+epsilon = 0.05
+C = 1.1
+sigma.hat = sd(call.discpayoff)
+N = ceiling((2.58*C*sigma.hat/epsilon)^2) #new simulation size
+
+n = N
+
+r = matrix(nrow=n,ncol=d+1)
+r[,1] = r.0
+z = matrix(rnorm(n*d),nrow=n,ncol=d)
+
+log.S = matrix(nrow=n,ncol=d+1)
+log.S[,1] = log(S.0)
+x = matrix(rnorm(n*d),nrow=n,ncol=d)
+y = matrix(rgamma(n*d,shape=delta/0.15,scale=0.15),nrow=n,ncol=d)
+
+for (i in 2:(d+1)){
+  #Vasicek interest rate model
+  r[,i] = r[,i-1] + 0.18*(0.086-r[,i-1])*delta+0.02*sqrt(delta)*z[,i-1]
+  #Variance-gamma model
+  log.S[,i] = log.S[,i-1]+(r[,i-1]+log(1-0.15*sigma^2/2)/0.15)*delta+sigma*sqrt(y[,i-1])*x[,i-1]
+}
+S = exp(log.S) #sample paths of Variance-Gamma model
+disc.factor = -delta*rowSums(r[,2:(d+1)]) #discount factor model
+call.discpayoff = pmax(S[,d+1]-K,0)*exp(disc.factor)
+est.mean = mean(call.discpayoff)
+est.error = 2.58*sd(call.discpayoff)/sqrt(n)
+CI.low = est.mean - est.error
+CI.high = est.mean + est.error
+toc()
+```
+Using a time step of 1 week, an error tolerance of $0.05 and a simulation size of ``r n``, the estimated fair call option price is ``r est.mean``. We are 99% confident the fair call option price is between ``r CI.low`` and ``r CI.high``.

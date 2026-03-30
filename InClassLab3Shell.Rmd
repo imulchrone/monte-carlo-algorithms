@@ -1,0 +1,68 @@
+---
+title: "In-ClassLab3"
+author: "Put Your Name"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+###settings for R chunks
+opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=FALSE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output; fig.keep: show all figures or just the last one in an R chunk
+```
+
+## 1. 
+
+In the new Monte Carlo estimator, we choose the basic random variable, Z, to follow a uniform distribution on [0,20]. And, the target random variable, W = 50000(20)/25*exp(-Z/25). The goal is to estimate the population mean of W, denoted as E(W). 
+
+### (b) 
+
+Define the sample size
+
+```{r}
+n = 10^3
+```
+
+
+To generate a sample of W, we generate a sample of Z~U[0,20].
+
+```{r}
+z = runif(n,min=0,max=20) #a sample from U[0,20] 
+```
+
+Using the sample of Z, we generate the sample of W = 50000(20)/25*exp(-Z/25).
+
+```{r}
+w = 50000*20/25*exp(-z/25)
+```
+
+We construct a 99% confidence interval for the mean of W, E(W). The formula is
+$$\bar{W}\pm 2.58\frac{\hat{\sigma}_W}{\sqrt{n}}.$$
+
+```{r}
+CI.low= mean(w) - 2.58*sd(w)/sqrt(n)
+CI.high= mean(w) + 2.58*sd(w)/sqrt(n)
+```
+
+The conclusion is: We are 99% confident that the fair premium will fall between ``r CI.low`` and ``r CI.high``.
+
+### (c)  
+
+If we would like the estimation error to be within an absolute error tolerance of $\varepsilon=5$ dollars, using the sample of W generated above, we can find the required simulation size by formula
+$$n = \lceil (2.58C\hat{\sigma}/\varepsilon)^2\rceil.$$
+
+```{r}
+sigma_hat = sd(w)
+C = 1.1
+epsilon = 5
+N = ceiling((2.58*C*sigma_hat/epsilon)^2)#required simulation size
+```
+
+The required simulation size of the new Monte Carlo estimator is ``r N``. 
+
+### (d)
+
+By using a more efficient sampling method, the required simulation size is significantly smaller. Compared to the previous estimator using a basic random variable, the required simulation size is about 20 times smaller with the target random variable method.
+

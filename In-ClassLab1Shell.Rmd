@@ -1,0 +1,74 @@
+---
+title: "In-ClassLab1Shell"
+author: "Ian Mulchrone"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=TRUE,result='asis'}
+##load packages
+library(knitr)
+###settings for R chunks
+knitr::opts_chunk$set(echo=TRUE,
+               message=FALSE,
+               warning=TRUE,
+               results='asis') #echo: whether prints the R code; message: whether shows the message outputs; warning: whether shows the warning messages; results: whether contain ## in front of the R output
+```
+
+## (b) Delete all existing variables first.
+
+```{r}
+rm(list=ls())
+```
+
+## (c) Create an nxd matrix to record the numbers of d people for n games 
+
+```{r}
+d = 5 #number of people
+n = 10^4 #number of games
+game.numbers = matrix(NA,nrow=n,ncol=d)
+```
+
+## (d) Assign the leftmost person with a random number on [0,1].
+
+```{r}
+game.numbers[,1] = runif(n)
+```
+
+## (e) Assign numbers to the rest of people in n games.
+
+```{r}
+for (i in 2:d){
+  game.numbers[,i] = 1/2*(game.numbers[,i-1]+runif(n))
+}
+```
+
+## (f) Record the winning (1) or losing (0) of each row (game).
+
+```{r}
+game.results = c()
+for (i in 1:n){
+  game.results[i] = any(game.numbers[i,]>0.6)
+}
+```
+
+## (g) Count the number of times that we win.
+
+```{r}
+number.wins = sum(game.results)
+```
+
+## (h) Compute the estimated probability.
+
+```{r}
+est.prob = number.wins/n
+```
+
+## (i) Compute the confidence interval.
+
+```{r}
+CI.low = est.prob - 2.58*sqrt(est.prob*(1-est.prob)/n)
+CI.high = est.prob + 2.58*sqrt(est.prob*(1-est.prob)/n)
+```
+
+We are 99% confident that the probability of winning the game falls between ``r CI.low`` and ``r CI.high``
+.
